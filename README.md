@@ -4,7 +4,9 @@
 
 *ICML 2026 · Official PyTorch implementation*
 
-![LVCG framework](asses/fig2.png)
+<p align="center">
+  <img src="asses/fig2.png" alt="LVCG framework" width="100%">
+</p>
 
 **LVCG** is the first general self-supervised framework for 12-lead ECG that learns in **latent vectorcardiogram (VCG) space** rather than raw lead signals. Because standard ECG is multiple linear views of the same cardiac field, lead-space learning entangles pathology with electrode geometry and generalizes poorly under domain shift; inspired by the Frank VCG model, LVCG instead recovers a unified 3D field and learns **view-invariant** representations via self-supervised multi-lead reconstruction—lifting visible leads, encoding beat morphology through a token bottleneck, modeling inter-beat dynamics, and projecting back to missing leads with a non-learnable geometry layer. This physically grounded design yields compact embeddings that transfer strongly to linear probing, multi-lead view reconstruction, and non-cardiac detection, especially with scarce labels and cross-site shift.
 
