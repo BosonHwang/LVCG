@@ -1,0 +1,117 @@
+# AIREADI Condition task definition.
+#
+# This file is the single source of truth for:
+#   * which OMOP condition_concept_ids become person-level binary columns
+#     (consumed by datasets/aireadi/build_labels.py),
+#   * how those columns are grouped into named "task groups" the linear probe
+#     can target (consumed by AIREADIConditionProvider).
+#
+# Adding / removing conditions is a CSV-level change here; the rest of the
+# pipeline picks up the new schema automatically on the next ``build_labels``
+# rerun.  Composite labels are computed at provider-load time, so editing the
+# ``composite_3`` section requires no rebuild.
+#
+# All ids come from /clinical_data/condition_occurrence.csv on the AIREADI
+# pilot release (2024-03).  Counts in comments reflect that snapshot.
+
+# ── Schema version (bump if the column layout of person_labels.parquet changes)
+schema_version: 1
+
+# ── The 30 conditions that get materialised as binary columns.
+# ``label`` is a short snake_case name used as a column header.
+# ``concept_id`` is a string (the CSV is mixed numeric / OMOP-extension).
+conditions:
+  - {label: elevated_a1c,         concept_id: "2005200547", count: 1202, source_value: mh_a1c}
+  - {label: hypertension,         concept_id: "316866",     count: 1151, source_value: mhoccur_hbp}
+  - {label: high_cholesterol,     concept_id: "4159131",    count: 1145, source_value: mhoccur_clsh}
+  - {label: arthritis,            concept_id: "4291025",    count: 941,  source_value: mhoccur_ra}
+  - {label: type_2_diabetes,      concept_id: "201826",     count: 899,  source_value: mhterm_dm2}
+  - {label: obesity,              concept_id: "433736",     count: 845,  source_value: mhoccur_obs}
+  - {label: dry_eye,              concept_id: "4036620",    count: 741,  source_value: mhoccur_ded}
+  - {label: cataracts,            concept_id: "4317977",    count: 688,  source_value: mhoccur_crt}
+  - {label: pre_diabetes,         concept_id: "37018196",   count: 555,  source_value: mhterm_predm}
+  - {label: urinary_problems,     concept_id: "81902",      count: 517,  source_value: mhoccur_ua}
+  - {label: digestive_problems,   concept_id: "4201745",    count: 516,  source_value: mhoccur_gi}
+  - {label: cancer,               concept_id: "4194405",    count: 402,  source_value: mhoccur_ca}
+  - {label: hearing_impairment,   concept_id: "439378",     count: 331,  source_value: mhoccur_ear}
+  - {label: other_heart_issue,    concept_id: "2005200627", count: 317,  source_value: mhoccur_cvdot}
+  - {label: pulmonary_disease,    concept_id: "4186898",    count: 303,  source_value: mhoccur_plm}
+  - {label: osteoporosis,         concept_id: "80502",      count: 291,  source_value: mhoccur_oa}
+  - {label: kidney_problems,      concept_id: "2005200017", count: 246,  source_value: mhoccur_rnl}
+  - {label: circulation_problems, concept_id: "2005200015", count: 204,  source_value: mhoccur_circ}
+  - {label: glaucoma,             concept_id: "437541",     count: 192,  source_value: mhoccur_glc}
+  - {label: neurological_other,   concept_id: "46271045",   count: 179,  source_value: mhoccur_cns}
+  - {label: low_blood_pressure,   concept_id: "317002",     count: 125,  source_value: mhoccur_lbp}
+  - {label: heart_attack,         concept_id: "4329847",    count: 124,  source_value: mhoccur_mi}
+  - {label: amd,                  concept_id: "374028",     count: 121,  source_value: mhoccur_amd}
+  - {label: stroke,               concept_id: "2005200628", count: 108,  source_value: mhoccur_strk}
+  - {label: diabetic_retinopathy, concept_id: "4174977",    count: 101,  source_value: mhoccur_pdr}
+  - {label: cognitive_impairment, concept_id: "439795",     count: 70,   source_value: mhoccur_cogn}
+  - {label: retinal_occlusion,    concept_id: "440392",     count: 33,   source_value: mhoccur_rvo}
+  - {label: multiple_sclerosis,   concept_id: "374919",     count: 13,   source_value: mhoccur_ms}
+  - {label: parkinsons,           concept_id: "381270",     count: 11,   source_value: mhoccur_pd}
+  - {label: dementia,             concept_id: "4182210",    count: 4,    source_value: mhoccur_ad}
+
+# ── Task groups (the provider's ``task_group`` argument selects one).
+task_groups:
+
+  # Primary clinical tasks: top 10 by prevalence (>= 500 positives).
+  # Single-label columns are taken straight from person_labels.parquet.
+  primary_10:
+    description: >
+      Top-10 most prevalent conditions; each remains a single binary column.
+      Useful as the headline benchmark.
+    columns:
+      - elevated_a1c
+      - hypertension
+      - high_cholesterol
+      - arthritis
+      - type_2_diabetes
+      - obesity
+      - dry_eye
+      - cataracts
+      - pre_diabetes
+      - urinary_problems
+
+  # Composite tasks: groups of related conditions joined with logical OR.
+  # Each entry becomes a single binary column (positive iff any member is 1).
+  composite_3:
+    description: >
+      Three high-level clinical syndromes derived by OR-ing related conditions.
+      Designed to be more clinically meaningful than any single noisy label.
+    composites:
+      - name: any_cardiovascular
+        members: [hypertension, high_cholesterol, other_heart_issue,
+                  heart_attack, stroke, circulation_problems, low_blood_pressure]
+      - name: any_eye_disease
+        members: [dry_eye, cataracts, glaucoma, amd,
+                  diabetic_retinopathy, retinal_occlusion]
+      - name: metabolic_spectrum
+        members: [elevated_a1c, type_2_diabetes, pre_diabetes, obesity]
+
+  # Full benchmark: all 30 conditions as independent binary columns.
+  all_30:
+    description: >
+      Every condition listed above as its own column.  Rare classes are
+      retained for completeness; expect noisy AUROC on those with < 50 cases.
+    columns: ALL
+
+  # Cardio-/cardiometabolic-relevant subset.  Five conditions hand-picked
+  # because they (a) have a clear ECG-detectable signature and (b) actually
+  # show meaningful per-class AUROC in our preliminary analysis.
+  #
+  # Per-class AUROC for clear_hug on these (one-vs-rest, test split):
+  #   heart_attack 0.74, other_heart_issue 0.70, type_2_diabetes 0.70,
+  #   hypertension 0.66, pulmonary_disease 0.65.
+  # Macro AUROC ~ 0.69 (vs ~0.59 on primary_10 / all_30 -- the non-cardiac
+  # labels were dragging the average down).
+  cardio_relevant:
+    description: >
+      5 cardio-relevant conditions with both a plausible ECG signature and
+      empirically learnable per-class AUROC (>= 0.65 on a held-out test set).
+    columns:
+      - heart_attack
+      - other_heart_issue
+      - type_2_diabetes
+      - hypertension
+      - pulmonary_disease

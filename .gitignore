@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+lvcg.egg-info/
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Environments
+.venv/
+venv/
+
+# Data and artifacts (not shipped)
+data/
+checkpoints/
+logs/
+probing/results/*.csv
+!probing/results/.gitkeep
+
+# LaTeX / paper build artifacts (keep figures under sections/figs/)
+docs/LVCG/main.log
+docs/LVCG/main.aux
+docs/LVCG/main.pdf
+docs/LVCG/main.out
+docs/LVCG/*.fdb_latexmk
+docs/LVCG/.vscode/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store

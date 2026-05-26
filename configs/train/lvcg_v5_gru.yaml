@@ -1,0 +1,66 @@
+# LVCG V5-GRU (aligned with ECGGen V5 / ecggen configs/train/v5.yaml)
+run:
+  checkpoint_root: ./checkpoints
+  log_root: ./logs
+  mini_val_ratio: 0.1
+  m: m5
+  s: s1
+  k: k1
+
+data:
+  dataset_type: mimic_raw
+  meta_root: /path/to/mimic/manifest.json
+  time_len: 1000
+  fs: 100
+  scale_method: zscore
+
+model:
+  type: lvcg
+  use_ttt: false
+  temporal_type: gru
+
+  num_leads: 12
+  lead_order: mimic
+
+  beat_len: 128
+  state_dim: 256
+  max_beats: 20
+
+  beat_encoder_stem: 48
+  beat_encoder_stages: [96, 192, 256, 256]
+  beat_encoder_blocks: [3, 3, 3, 2]
+  beat_encoder_kernel: 7
+  beat_encoder_dropout: 0.1
+
+  gru_hidden_dim: 256
+  gru_num_layers: 2
+  gru_dropout: 0.1
+
+  decoder_initial_channels: 128
+  decoder_hidden_channels: [128, 64, 64, 32, 32]
+
+  rr_num_basis: 8
+  proj_dim: 256
+  proj_hidden: 512
+  ecg_decoder_hidden: 128
+  ecg_decoder_layers: 2
+  rr_lead_idx: 1
+
+train:
+  batch_size: 64
+  lr: 0.0005
+  weight_decay: 0.01
+  max_steps: 500000
+  warmup_steps: 2000
+  grad_clip: 1.0
+
+  lambda_temporal: 0.1
+  lambda_beat: 1.0
+  lambda_base: 1.0
+  lambda_ssl_struct: 0.0
+  lambda_ssl_dynamic: 0.0
+
+  num_visible: 3
+  log_interval: 100
+  save_interval: 50000
+  eval_interval: 1000

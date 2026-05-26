@@ -1,0 +1,41 @@
+# Linear probing on 7 downstream benchmarks (10% labels, seed 42).
+models:
+  lvcg:
+    type: lvcg
+    checkpoint: checkpoints/m5s1k1/final.pt
+
+datasets:
+  - ptbxl_super_class
+  - ptbxl_sub_class
+  - ptbxl_form
+  - ptbxl_rhythm
+  - icbeb
+  - chapman
+  - aireadi_condition_cardio:
+      type: aireadi_condition
+      task_group: cardio_relevant
+      ecg_root: /path/to/aireadi
+      manifest_tsv: /path/to/aireadi/cardiac_ecg/manifest.tsv
+      labels_parquet: probing/datasets/aireadi/data/person_labels.parquet
+      split_csv: probing/datasets/aireadi/data/splits/v1.csv
+      task_config: probing/configs/tasks/aireadi_condition.yaml
+
+label_ratios: [0.1]
+seeds: [42]
+
+data:
+  raw_root: /path/to/ecg/raw
+  splits_root: probing/data_splits
+  norm_method: zscore
+
+chapman_classes: ["SR", "AFIB", "1AVB", "RBBB"]
+
+probe:
+  batch_size: 256
+  lr: 0.001
+  max_epochs: 50
+  patience: 5
+  num_workers: 4
+  freeze_backbone: true
+
+device: cuda
