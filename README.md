@@ -1,8 +1,10 @@
-# LVCG-v0
+# LVCG
 
 ## Learning Cardiac Latent Representations in Vectorcardiogram Space
 
 *ICML 2026 · Official PyTorch implementation*
+
+**[🌐 Project Page](https://bosonhwang.github.io/LVCG-page/) · [📄 arXiv](https://arxiv.org/abs/2605.31249)**
 
 <p align="center">
   <img src="asses/fig2.png" alt="LVCG framework" width="100%">
@@ -82,7 +84,17 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the LVCG data flow and mode
 
 ## Citation
 
-If you use this code, please cite the LVCG paper (bibtex TBD).
+If you use this code, please cite:
+
+```bibtex
+@inproceedings{huang2026lvcg,
+  title     = {Learning Cardiac Latent Representations in Vectorcardiogram Space},
+  author    = {Huang, Bosong and Zhao, Panzhen and Li, Zengxiang and Lee, Patricia
+               and Jin, Wei and Liew, Alan Wee-Chung and Jin, Ming and Pan, Shirui},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2026}
+}
+```
 
 ## License
 

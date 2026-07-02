@@ -81,11 +81,20 @@ def train(cfg: Config) -> None:
                 outputs["beat_mask"],
             )
             loss_base = base_beat_loss(outputs["V_base_hat"], outputs["V_base"])
-            loss_beat = beat_level_loss(
-                outputs["V_hat_beats"][:, 1:-1],
-                outputs["V_beats"],
-                outputs["beat_mask_full"][:, 1:-1],
-            )
+            # V_beats is full length (N) in the GRU path but core-only (N-2) in the
+            # TTT path, while V_hat_beats is always length N; align before comparing.
+            V_hat_beats = outputs["V_hat_beats"]
+            V_beats = outputs["V_beats"]
+            if V_hat_beats.shape[1] == V_beats.shape[1]:
+                loss_beat = beat_level_loss(
+                    V_hat_beats, V_beats, outputs["beat_mask_full"]
+                )
+            else:
+                loss_beat = beat_level_loss(
+                    V_hat_beats[:, 1:-1],
+                    V_beats,
+                    outputs["beat_mask_full"][:, 1:-1],
+                )
 
             loss = (
                 loss_recon
